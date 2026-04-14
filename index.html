@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>ArchFlow — The Figma for Architecture</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Design, collaborate, and present buildings in the browser. Real-time multiplayer 3D for architects. AI massing, live shadows, zero install." />
+<meta property="og:title" content="ArchFlow — The Figma for Architecture" />
+<meta property="og:description" content="Real-time multiplayer 3D modeling for architects. No install. Free for students." />
+<style>
+  :root {
+    --bg: #0a0c10;
+    --bg-2: #12151c;
+    --panel: #181c25;
+    --border: #262b36;
+    --text: #f3f4f6;
+    --muted: #8b92a1;
+    --accent: #ff5a1f;
+    --accent-2: #ffa057;
+    --purple: #a78bfa;
+    --green: #22c55e;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg); color: var(--text);
+    font: 16px/1.6 ui-sans-serif, system-ui, -apple-system, "Segoe UI", Inter, sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+  /* Nav */
+  nav {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(10,12,16,0.8); backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav .wrap { display: flex; align-items: center; gap: 24px; padding: 14px 24px; }
+  .logo { font-weight: 800; letter-spacing: -0.5px; font-size: 20px; color: var(--accent); }
+  .logo span { color: var(--text); font-weight: 500; }
+  nav ul { display: flex; gap: 20px; list-style: none; margin-left: auto; font-size: 14px; color: var(--muted); }
+  nav ul a:hover { color: var(--text); }
+  .btn {
+    display: inline-block; padding: 10px 18px; border-radius: 8px;
+    font-weight: 600; font-size: 14px; cursor: pointer; border: none;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), var(--accent-2));
+    color: #000;
+  }
+  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(255,90,31,0.35); }
+  .btn-ghost { background: transparent; color: var(--text); border: 1px solid var(--border); }
+  .btn-ghost:hover { border-color: var(--accent); }
+  /* Hero */
+  .hero {
+    padding: 100px 0 60px; text-align: center; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(255,90,31,0.18), transparent 50%),
+      radial-gradient(ellipse at 70% 60%, rgba(167,139,250,0.15), transparent 50%);
+    pointer-events: none;
+  }
+  .hero .badge {
+    display: inline-block; padding: 6px 14px; border-radius: 20px;
+    background: rgba(255,90,31,0.12); border: 1px solid rgba(255,90,31,0.35);
+    color: var(--accent-2); font-size: 12px; margin-bottom: 24px;
+  }
+  .hero h1 {
+    font-size: clamp(40px, 6vw, 72px); line-height: 1.05; letter-spacing: -2px;
+    font-weight: 800; margin-bottom: 20px;
+  }
+  .hero h1 em {
+    font-style: normal;
+    background: linear-gradient(135deg, var(--accent), var(--purple));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .hero p.lead {
+    font-size: 20px; color: var(--muted); max-width: 640px; margin: 0 auto 32px;
+  }
+  .hero .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .hero .trust {
+    margin-top: 40px; font-size: 12px; color: var(--muted);
+    letter-spacing: 2px; text-transform: uppercase;
+  }
+  /* Product shot */
+  .demo-frame {
+    max-width: 1080px; margin: 48px auto 0; position: relative;
+    border-radius: 14px; overflow: hidden;
+    border: 1px solid var(--border);
+    box-shadow: 0 40px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03);
+    background: var(--panel);
+    aspect-ratio: 16 / 9;
+  }
+  .demo-frame iframe {
+    width: 100%; height: 100%; border: none; display: block;
+  }
+  .demo-frame .bar {
+    position: absolute; top: 0; left: 0; right: 0; height: 28px;
+    background: linear-gradient(#1c2029, #181c25);
+    display: flex; align-items: center; gap: 6px; padding: 0 12px;
+    z-index: 2; pointer-events: none;
+  }
+  .demo-frame .bar span {
+    width: 10px; height: 10px; border-radius: 50%;
+  }
+  .demo-frame .bar .r { background: #ff5f56; }
+  .demo-frame .bar .y { background: #ffbd2e; }
+  .demo-frame .bar .g { background: #27c93f; }
+  .demo-frame iframe { margin-top: 28px; height: calc(100% - 28px); }
+
+  /* Sections */
+  section { padding: 100px 0; }
+  section.alt { background: var(--bg-2); }
+  .section-label {
+    text-transform: uppercase; letter-spacing: 3px; font-size: 12px;
+    color: var(--accent); font-weight: 600; margin-bottom: 12px;
+  }
+  h2 {
+    font-size: clamp(32px, 4vw, 48px); letter-spacing: -1px; font-weight: 700;
+    line-height: 1.1; margin-bottom: 16px;
+  }
+  .section-lead { color: var(--muted); font-size: 18px; max-width: 640px; margin-bottom: 48px; }
+
+  /* Problem */
+  .problem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 24px; }
+  .problem-card {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 24px;
+  }
+  .problem-card .tool { color: var(--accent-2); font-weight: 600; font-size: 13px; margin-bottom: 6px; letter-spacing: 1px; text-transform: uppercase; }
+  .problem-card p { color: var(--muted); font-size: 14px; }
+
+  /* Features */
+  .feature-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; }
+  .feature {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 28px;
+    position: relative; overflow: hidden;
+  }
+  .feature::after {
+    content: ''; position: absolute; top: -60px; right: -60px; width: 160px; height: 160px;
+    background: radial-gradient(circle, rgba(255,90,31,0.15), transparent 70%);
+    pointer-events: none;
+  }
+  .feature .ico {
+    font-size: 28px; margin-bottom: 14px; display: inline-block;
+    width: 48px; height: 48px; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(255,90,31,0.15), rgba(167,139,250,0.15));
+    display: flex; align-items: center; justify-content: center;
+  }
+  .feature h3 { font-size: 18px; margin-bottom: 8px; }
+  .feature p { color: var(--muted); font-size: 14px; }
+
+  /* Pricing */
+  .price-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; }
+  .price {
+    background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 28px;
+    display: flex; flex-direction: column;
+  }
+  .price.featured {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px var(--accent), 0 20px 60px rgba(255,90,31,0.15);
+    position: relative;
+  }
+  .price.featured::before {
+    content: 'MOST POPULAR'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+    background: var(--accent); color: #000; padding: 4px 12px; border-radius: 20px;
+    font-size: 10px; font-weight: 700; letter-spacing: 1px;
+  }
+  .price h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 2px; color: var(--muted); margin-bottom: 12px; }
+  .price .amt { font-size: 44px; font-weight: 700; letter-spacing: -1px; }
+  .price .amt span { font-size: 16px; color: var(--muted); font-weight: 400; }
+  .price ul { list-style: none; margin: 20px 0 24px; }
+  .price li { padding: 6px 0; font-size: 14px; color: var(--muted); }
+  .price li::before { content: '✓ '; color: var(--green); font-weight: 600; }
+  .price .btn { margin-top: auto; text-align: center; }
+
+  /* Waitlist */
+  .waitlist {
+    background: linear-gradient(135deg, rgba(255,90,31,0.12), rgba(167,139,250,0.12));
+    border: 1px solid var(--border); border-radius: 16px;
+    padding: 56px 40px; text-align: center;
+  }
+  .waitlist h2 { margin-bottom: 12px; }
+  .waitlist p { color: var(--muted); margin-bottom: 28px; }
+  .waitlist form {
+    display: flex; gap: 8px; max-width: 460px; margin: 0 auto; flex-wrap: wrap;
+  }
+  .waitlist input {
+    flex: 1; min-width: 220px; padding: 14px 16px; border-radius: 8px;
+    background: var(--panel); border: 1px solid var(--border); color: var(--text);
+    font: inherit;
+  }
+  .waitlist input:focus { outline: none; border-color: var(--accent); }
+  .waitlist button { padding: 14px 24px; }
+  .waitlist .success {
+    margin-top: 16px; color: var(--green); font-size: 14px; font-weight: 600; min-height: 20px;
+  }
+
+  /* FAQ */
+  details {
+    border-bottom: 1px solid var(--border); padding: 20px 0; cursor: pointer;
+  }
+  details summary { font-weight: 600; list-style: none; display: flex; justify-content: space-between; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: '+'; color: var(--accent); font-size: 24px; font-weight: 400; }
+  details[open] summary::after { content: '−'; }
+  details p { color: var(--muted); margin-top: 10px; font-size: 14px; }
+
+  footer {
+    padding: 48px 0 40px; border-top: 1px solid var(--border); text-align: center;
+    color: var(--muted); font-size: 13px;
+  }
+  footer .logo { justify-content: center; margin-bottom: 12px; display: block; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="wrap">
+    <div class="logo">ArchFlow<span>.</span></div>
+    <ul>
+      <li><a href="#problem">Why</a></li>
+      <li><a href="#features">Features</a></li>
+      <li><a href="#pricing">Pricing</a></li>
+      <li><a href="#faq">FAQ</a></li>
+    </ul>
+    <a class="btn btn-primary" href="app.html">Try the beta →</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="badge">✨ Now in open beta · Free for students</div>
+    <h1>Design buildings,<br/>together. <em>In the browser.</em></h1>
+    <p class="lead">ArchFlow is the real-time multiplayer 3D modeler for the conceptual phase. No installs. No file handoffs. Just your team, your clients, and the idea.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="app.html">Launch ArchFlow — free</a>
+      <a class="btn btn-ghost" href="#waitlist">Get studio access</a>
+    </div>
+    <div class="trust">Built for the post-SketchUp generation</div>
+  </div>
+
+  <div class="wrap">
+    <div class="demo-frame">
+      <div class="bar"><span class="r"></span><span class="y"></span><span class="g"></span></div>
+      <iframe src="app.html" loading="lazy" title="ArchFlow demo"></iframe>
+    </div>
+  </div>
+</header>
+
+<section id="problem">
+  <div class="wrap">
+    <div class="section-label">The problem</div>
+    <h2>Architects are stuck in<br/>desktop software from 2005.</h2>
+    <p class="section-lead">Four tools dominate a billion-dollar market. All of them were designed for a single user on a single machine. None of them match how creative teams actually work in 2026.</p>
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="tool">SketchUp</div>
+        <p>Concept-phase king, but stagnant for a decade. File-sync "collaboration". BugSplats on large models. No path to BIM.</p>
+      </div>
+      <div class="problem-card">
+        <div class="tool">Revit · $335/mo</div>
+        <p>Industry BIM standard. Brutal UX. Useless for early concept design — everyone models twice.</p>
+      </div>
+      <div class="problem-card">
+        <div class="tool">ArchiCAD · $5k+</div>
+        <p>Friendlier than Revit. Desktop-only. File incompatibilities between versions. Expensive for solo architects.</p>
+      </div>
+      <div class="problem-card">
+        <div class="tool">AutoCAD · $2k/yr</div>
+        <p>The 2D lingua franca. Legacy workflow. Client presentations still happen through PDF screenshots.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="features" class="alt">
+  <div class="wrap">
+    <div class="section-label">The ArchFlow bet</div>
+    <h2>Seven things that<br/>make us different.</h2>
+    <p class="section-lead">We're not rebuilding Revit. We're building what comes after it — the tool your team will actually enjoy opening on a Monday morning.</p>
+    <div class="feature-grid">
+      <div class="feature">
+        <div class="ico">👥</div>
+        <h3>Multiplayer in 3D space</h3>
+        <p>See your collaborators' cursors as 3D avatars moving through the model itself — not just a sidebar panel. Powered by Yjs CRDT.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🔗</div>
+        <h3>Shareable live URLs</h3>
+        <p>Send a link. The client opens the model in their browser, rotates it, comments. No install, no sign-up, no screenshare.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">💬</div>
+        <h3>Comments on faces, not PDFs</h3>
+        <p>Pin a threaded comment to any surface, edge, or camera view. @mention, resolve, done. Bluebeam is over.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">✨</div>
+        <h3>AI massing from a brief</h3>
+        <p>"3 variations of an 800m² library with a courtyard" → editable meshes on your site, not Midjourney images.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">☀</div>
+        <h3>Live environmental HUD</h3>
+        <p>Sun path, shadows, GFA/FAR, embodied carbon — updating as you drag. Forma-class analysis, in the viewport.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🏗</div>
+        <h3>One-way door to BIM</h3>
+        <p>Walls, slabs, and roofs carry semantic intent. One-click IFC export into Revit or ArchiCAD. Stop modeling twice.</p>
+      </div>
+      <div class="feature">
+        <div class="ico">🌍</div>
+        <h3>A component library that's actually alive</h3>
+        <p>Remixable, forkable, attributable families. Figma Community meets GitHub, for architecture.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pricing">
+  <div class="wrap">
+    <div class="section-label">Pricing</div>
+    <h2>Priced for humans,<br/>not procurement.</h2>
+    <p class="section-lead">Free forever for students and solo experimentation. Pay only when your studio depends on it.</p>
+    <div class="price-grid">
+      <div class="price">
+        <h3>Free</h3>
+        <div class="amt">$0<span>/mo</span></div>
+        <ul>
+          <li>2 editors, 3 projects</li>
+          <li>Unlimited viewers</li>
+          <li>Public share links</li>
+          <li>Community library</li>
+        </ul>
+        <a class="btn btn-ghost" href="app.html">Start free</a>
+      </div>
+      <div class="price featured">
+        <h3>Pro</h3>
+        <div class="amt">$18<span>/editor/mo</span></div>
+        <ul>
+          <li>Unlimited projects</li>
+          <li>Private libraries</li>
+          <li>Version history</li>
+          <li>AI massing (50 gen/mo)</li>
+          <li>Priority support</li>
+        </ul>
+        <a class="btn btn-primary" href="#waitlist">Join waitlist</a>
+      </div>
+      <div class="price">
+        <h3>Studio</h3>
+        <div class="amt">$30<span>/editor/mo</span></div>
+        <ul>
+          <li>Everything in Pro</li>
+          <li>SSO + admin controls</li>
+          <li>IFC / Revit export</li>
+          <li>Unlimited AI</li>
+          <li>Dedicated onboarding</li>
+        </ul>
+        <a class="btn btn-ghost" href="#waitlist">Talk to us</a>
+      </div>
+    </div>
+    <p style="text-align:center; margin-top:32px; color:var(--muted); font-size:14px">
+      🎓 Free forever for verified students — <a href="#waitlist" style="color:var(--accent-2);text-decoration:underline">claim your .edu license</a>
+    </p>
+  </div>
+</section>
+
+<section id="waitlist" class="alt">
+  <div class="wrap">
+    <div class="waitlist">
+      <h2>Get early access.</h2>
+      <p>We're onboarding 50 studios to the private beta. Join the list and we'll reach out within 48h.</p>
+      <form id="waitlist-form">
+        <input type="email" id="wl-email" placeholder="you@studio.com" required />
+        <button class="btn btn-primary" type="submit" id="wl-submit">Request access</button>
+      </form>
+      <div class="success" id="wl-success"></div>
+      <div style="margin-top:16px;font-size:11px;color:var(--muted)" id="wl-count"></div>
+    </div>
+  </div>
+</section>
+
+<section id="faq">
+  <div class="wrap" style="max-width:820px">
+    <div class="section-label">FAQ</div>
+    <h2>Common questions.</h2>
+    <div style="margin-top:32px">
+      <details>
+        <summary>Is this a replacement for Revit?</summary>
+        <p>Not in v1. ArchFlow focuses on conceptual and schematic design — the first 2–8 weeks of a project. We export to IFC so your concept feeds into Revit or ArchiCAD for construction documents. The promise: stop modeling twice.</p>
+      </details>
+      <details>
+        <summary>Does it work offline?</summary>
+        <p>The editor runs in the browser with local-first persistence. You can edit offline; changes sync when you reconnect. Real-time collaboration naturally requires a connection.</p>
+      </details>
+      <details>
+        <summary>Who owns the model?</summary>
+        <p>You do. Every project exports to open formats: IFC, GLB, OBJ, DWG. We'll never lock you in.</p>
+      </details>
+      <details>
+        <summary>What about rendering?</summary>
+        <p>We integrate with Enscape, Lumion, D5, and Twinmotion via GLB export. ArchFlow is the model, not the render.</p>
+      </details>
+      <details>
+        <summary>Which browsers are supported?</summary>
+        <p>Chrome, Edge, Firefox, and Safari (latest two versions). Performance is best on Chromium with WebGPU enabled.</p>
+      </details>
+      <details>
+        <summary>Is my data secure?</summary>
+        <p>Projects are encrypted at rest and in transit. SSO and role-based access control ship in the Studio plan. We're SOC 2 Type I in progress.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="logo">ArchFlow<span>.</span></div>
+    <p>© 2026 ArchFlow. Built for architects, by people who wish SketchUp had caught up.</p>
+    <p style="margin-top:8px">
+      <a href="app.html" style="color:var(--accent-2)">Try the beta</a> ·
+      <a href="#waitlist" style="color:var(--accent-2)">Get access</a> ·
+      <a href="mailto:hello@archflow.app" style="color:var(--accent-2)">hello@archflow.app</a>
+    </p>
+  </div>
+</footer>
+
+<script>
+  // =====================================================================
+  // WAITLIST FORM — Web3Forms backend
+  // =====================================================================
+  // HOW TO ACTIVATE:
+  // 1. Go to https://web3forms.com/ and enter your email (the one that will
+  //    receive waitlist submissions). They email you an "access key".
+  // 2. Paste that key into WEB3FORMS_KEY below and save this file.
+  // 3. That's it. Every submission lands in your inbox instantly.
+  // Until the key is set, submissions are kept in localStorage so the form
+  // still "works" for local testing.
+  const WEB3FORMS_KEY = 'YOUR_ACCESS_KEY_HERE';
+  // ---------------------------------------------------------------------
+
+  const form = document.getElementById('waitlist-form');
+  const success = document.getElementById('wl-success');
+  const submitBtn = document.getElementById('wl-submit');
+  const countEl = document.getElementById('wl-count');
+
+  function updateLocalCount() {
+    const list = JSON.parse(localStorage.getItem('archflow-waitlist') || '[]');
+    if (WEB3FORMS_KEY.startsWith('YOUR_')) {
+      countEl.textContent = list.length
+        ? `${list.length} local signup${list.length>1?'s':''} stored (demo mode — activate Web3Forms to receive by email)`
+        : 'Demo mode — waitlist stored locally until Web3Forms is activated';
+    } else {
+      countEl.textContent = '';
+    }
+  }
+  updateLocalCount();
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const email = document.getElementById('wl-email').value.trim();
+    if (!email) return;
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Sending…';
+
+    // Always keep a local copy for safety
+    const list = JSON.parse(localStorage.getItem('archflow-waitlist') || '[]');
+    list.push({ email, time: Date.now() });
+    localStorage.setItem('archflow-waitlist', JSON.stringify(list));
+
+    if (WEB3FORMS_KEY && !WEB3FORMS_KEY.startsWith('YOUR_')) {
+      try {
+        const res = await fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            access_key: WEB3FORMS_KEY,
+            subject: 'New ArchFlow waitlist signup',
+            from_name: 'ArchFlow Waitlist',
+            email,
+            message: `New beta request from ${email}`,
+            referrer: document.referrer || 'direct',
+            user_agent: navigator.userAgent,
+          }),
+        });
+        const data = await res.json();
+        if (!data.success) throw new Error(data.message || 'Submission failed');
+        success.style.color = 'var(--green)';
+        success.textContent = "You're on the list ✓ We'll email you within 48h.";
+      } catch (err) {
+        console.error(err);
+        success.style.color = '#f87171';
+        success.textContent = "Saved locally — couldn't reach server. Try again in a moment.";
+      }
+    } else {
+      success.style.color = 'var(--green)';
+      success.textContent = "Saved locally (demo mode). Activate Web3Forms to receive submissions by email.";
+    }
+
+    form.reset();
+    submitBtn.disabled = false;
+    submitBtn.textContent = 'Request access';
+    updateLocalCount();
+  });
+</script>
+</body>
+</html>
