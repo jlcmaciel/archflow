@@ -429,6 +429,24 @@
   </div>
 </footer>
 
+<!-- =====================================================================
+     CLOUDFLARE WEB ANALYTICS — privacy-friendly, cookieless, free, GDPR-ok
+     Auto-activates when you set a real token below.
+     How to get a token (2 minutes):
+       1. Cloudflare dashboard → Analytics & Logs → Web Analytics → Add a site
+       2. Site name: ArchFlow · Hostname: archflow.joaolcmaciel.workers.dev
+       3. Copy the token (a long hex string) and paste it below.
+     ===================================================================== -->
+<script>
+  window.__CF_ANALYTICS_TOKEN__ = '08b1b924440543718e814ef38071b714';
+  if (!window.__CF_ANALYTICS_TOKEN__.startsWith('YOUR_')) {
+    const s = document.createElement('script');
+    s.defer = true; s.src = 'https://static.cloudflareinsights.com/beacon.min.js';
+    s.setAttribute('data-cf-beacon', JSON.stringify({ token: window.__CF_ANALYTICS_TOKEN__ }));
+    document.head.appendChild(s);
+  }
+</script>
+
 <script>
   // =====================================================================
   // WAITLIST FORM — Web3Forms backend
