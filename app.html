@@ -6,14 +6,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
   :root {
-    --bg: #0d0f13;
-    --panel: #15181f;
-    --panel-2: #1c2029;
-    --border: #262b36;
-    --text: #e5e7eb;
-    --muted: #8b92a1;
-    --accent: #ff5a1f;
-    --accent-2: #ffa057;
+    --bg: #ffffff;
+    --panel: #ffffff;
+    --panel-2: #f8fafc;
+    --border: #e2e8f0;
+    --text: #0f172a;
+    --muted: #64748b;
+    --accent: #38bdf8;       /* light blue */
+    --accent-2: #0ea5e9;     /* hover / darker blue */
+    --green: #4ade80;        /* light green */
     --success: #22c55e;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,9 +48,12 @@
     background: var(--panel-2); color: var(--text); border: 1px solid var(--border);
     padding: 6px 10px; border-radius: 6px; cursor: pointer; font: inherit; font-size: 12px;
   }
-  button.tb:hover { border-color: var(--accent); }
-  button.tb.primary { background: var(--accent); border-color: var(--accent); color: #000; font-weight: 600; }
-  button.tb.primary:hover { background: var(--accent-2); }
+  button.tb:hover { border-color: var(--accent); color: var(--accent-2); }
+  button.tb.primary {
+    background: linear-gradient(135deg, var(--accent), var(--green));
+    border-color: transparent; color: #ffffff; font-weight: 600;
+  }
+  button.tb.primary:hover { filter: brightness(1.05); }
   #toolbar {
     background: var(--panel); border-right: 1px solid var(--border);
     display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 0;
@@ -59,21 +63,22 @@
     border-radius: 6px; cursor: pointer; color: var(--muted); font-size: 18px; position: relative;
   }
   .tool:hover { background: var(--panel-2); color: var(--text); }
-  .tool.active { background: var(--accent); color: #000; }
+  .tool.active { background: var(--accent); color: #ffffff; }
   .tool[data-tip]:hover::after {
     content: attr(data-tip); position: absolute; left: 48px; top: 50%; transform: translateY(-50%);
-    background: #000; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 10;
+    background: #0f172a; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 11px; white-space: nowrap; z-index: 10;
   }
   .sep { width: 24px; height: 1px; background: var(--border); margin: 6px 0; }
-  #canvas-wrap { position: relative; overflow: hidden; background: #0a0c10; }
+  #canvas-wrap { position: relative; overflow: hidden; background: #eef4fb; }
   canvas { display: block; }
   #hud, #status, #sun-ctrl, #connection {
-    position: absolute; background: rgba(21,24,31,0.85); border: 1px solid var(--border);
-    border-radius: 8px; backdrop-filter: blur(8px);
+    position: absolute; background: rgba(255,255,255,0.92); border: 1px solid var(--border);
+    border-radius: 8px; backdrop-filter: blur(10px);
+    box-shadow: 0 2px 8px rgba(15,23,42,0.06);
   }
   #hud { top: 12px; left: 12px; padding: 10px 12px; font-size: 12px; min-width: 180px; }
   #hud .row { display: flex; justify-content: space-between; gap: 16px; padding: 2px 0; }
-  #hud .row b { color: var(--accent-2); font-weight: 600; }
+  #hud .row b { color: var(--accent-2); font-weight: 700; }
   #hud .label { color: var(--muted); }
   #status { bottom: 12px; left: 12px; padding: 6px 10px; font-size: 11px; color: var(--muted); border-radius: 6px; }
   #sun-ctrl { bottom: 12px; right: 12px; padding: 10px 12px; font-size: 11px;
@@ -104,12 +109,13 @@
   .comment .meta { color: var(--muted); font-size: 10px; margin-bottom: 4px; }
   #toast {
     position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
-    background: var(--success); color: #000; padding: 8px 16px; border-radius: 6px;
+    background: var(--success); color: #ffffff; padding: 8px 16px; border-radius: 6px;
     font-weight: 600; opacity: 0; transition: opacity 0.2s; z-index: 100; pointer-events: none;
+    box-shadow: 0 4px 12px rgba(34,197,94,0.3);
   }
   #toast.show { opacity: 1; }
   #ai-modal {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6); display: none;
+    position: fixed; inset: 0; background: rgba(15,23,42,0.4); display: none;
     align-items: center; justify-content: center; z-index: 200; backdrop-filter: blur(4px);
   }
   #ai-modal.show { display: flex; }
@@ -133,7 +139,7 @@
   #ai-modal .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 16px; }
   #ai-feedback { color: var(--muted); font-size: 11px; margin-top: 8px; min-height: 14px; }
   #drop-overlay {
-    position: absolute; inset: 0; background: rgba(255,90,31,0.15);
+    position: absolute; inset: 0; background: rgba(56,189,248,0.10);
     border: 3px dashed var(--accent); display: none;
     align-items: center; justify-content: center; z-index: 50; pointer-events: none;
     font-size: 22px; font-weight: 600; color: var(--accent-2);
@@ -141,8 +147,9 @@
   #drop-overlay.show { display: flex; }
   #site-panel {
     position: absolute; top: 70px; right: 12px; width: 240px;
-    background: rgba(21,24,31,0.92); border: 1px solid var(--border); border-radius: 8px;
-    padding: 12px; font-size: 11px; display: none; backdrop-filter: blur(8px);
+    background: rgba(255,255,255,0.96); border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; font-size: 11px; display: none; backdrop-filter: blur(10px);
+    box-shadow: 0 4px 16px rgba(15,23,42,0.08);
   }
   #site-panel.show { display: block; }
   #site-panel h4 { font-size: 11px; text-transform: uppercase; color: var(--muted); margin-bottom: 10px; letter-spacing: 0.5px; }
@@ -158,7 +165,7 @@
   #site-panel .btn-row button.danger:hover { border-color: #ef4444; color: #ef4444; }
   .remote-label {
     position: absolute; pointer-events: none; font-size: 10px; padding: 2px 6px;
-    border-radius: 3px; color: #000; font-weight: 600; white-space: nowrap; transform: translate(-50%, -140%);
+    border-radius: 3px; color: #ffffff; font-weight: 600; white-space: nowrap; transform: translate(-50%, -140%);
   }
 </style>
 </head>
@@ -171,7 +178,7 @@
     <div id="room-badge" title="Click to copy multiplayer link">Room: <b id="room-name">—</b></div>
     <div class="presence" id="presence"></div>
     <button class="tb" id="btn-site">📁 Site</button>
-    <button class="tb" id="btn-ai" style="background:linear-gradient(135deg,#ff5a1f,#a78bfa);color:#fff;border:none;font-weight:600">✨ AI Massing</button>
+    <button class="tb" id="btn-ai" style="background:linear-gradient(135deg,#38bdf8,#4ade80);color:#fff;border:none;font-weight:600">✨ AI Massing</button>
     <button class="tb" id="btn-export-glb">⬇ GLB</button>
     <button class="tb" id="btn-export-obj">⬇ OBJ</button>
     <button class="tb" id="btn-export-ifc" title="Revit / ArchiCAD">⬇ IFC</button>
@@ -344,7 +351,7 @@ provider.on('status', (e) => {
 });
 
 // Local user identity
-const palette = ['#ff5a1f','#60a5fa','#f472b6','#22c55e','#a78bfa','#fbbf24','#34d399','#f87171'];
+const palette = ['#38bdf8','#4ade80','#60a5fa','#34d399','#0ea5e9','#86efac','#22d3ee','#22c55e'];
 const myColor = palette[Math.floor(Math.random()*palette.length)];
 const names = ['Ana','Bruno','Carla','Diego','Elena','Felipe','Gabi','Heitor','Iara','João','Katia','Lucas','Maria','Nina','Otávio','Paula'];
 const myName = names[Math.floor(Math.random()*names.length)];
@@ -359,11 +366,11 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(window.devicePixelRatio);
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.setClearColor(0x0a0c10);
+renderer.setClearColor(0xeef4fb);
 wrap.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0x0a0c10, 60, 240);
+scene.fog = new THREE.Fog(0xe4eef8, 80, 280);
 
 const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
 camera.position.set(28, 22, 32);
@@ -372,9 +379,9 @@ const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true; controls.dampingFactor = 0.1;
 controls.target.set(0, 0, 0);
 
-const ambient = new THREE.HemisphereLight(0x7794c4, 0x1a1410, 0.55);
+const ambient = new THREE.HemisphereLight(0xcfe3f7, 0xdfead7, 0.75);
 scene.add(ambient);
-const sun = new THREE.DirectionalLight(0xfff1d0, 1.8);
+const sun = new THREE.DirectionalLight(0xfff8e7, 1.5);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
 sun.shadow.camera.left = -60; sun.shadow.camera.right = 60;
@@ -386,26 +393,27 @@ function setSunAngle(hour) {
   const t = (hour - 6) / 12;
   const angle = t * Math.PI;
   sun.position.set(Math.cos(angle) * 60, Math.sin(angle) * 60 + 5, 20 + Math.sin(angle) * 15);
-  sun.intensity = 0.4 + 1.4 * Math.sin(angle);
-  scene.background = new THREE.Color().setHSL(0.58, 0.25, 0.04 + 0.08 * Math.sin(angle));
+  sun.intensity = 0.4 + 1.3 * Math.sin(angle);
+  // Light sky gradient — pale blue at midday, warmer pale at dawn/dusk
+  scene.background = new THREE.Color().setHSL(0.58, 0.45, 0.82 + 0.06 * Math.sin(angle));
 }
 setSunAngle(14);
 
 const ground = new THREE.Mesh(
   new THREE.PlaneGeometry(300, 300),
-  new THREE.MeshStandardMaterial({ color: 0x1a2028, roughness: 1 })
+  new THREE.MeshStandardMaterial({ color: 0xeaf1ea, roughness: 1 }) // soft pale green
 );
 ground.rotation.x = -Math.PI / 2;
 ground.receiveShadow = true;
 ground.name = 'ground';
 scene.add(ground);
-scene.add(new THREE.GridHelper(300, 150, 0x2a3444, 0x1a2028));
+scene.add(new THREE.GridHelper(300, 150, 0xbacfea, 0xd8e3f2)); // soft blue grid
 
 // Context buildings (not synced — local decoration)
 const contextGroup = new THREE.Group();
 [[-28,-18,12,8,14],[24,-22,14,12,10],[30,14,10,6,18],[-22,26,16,10,12],[0,-40,20,14,10]]
   .forEach(([x,z,w,h,d]) => {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({color:0x2a3240, roughness:1}));
+    const m = new THREE.Mesh(new THREE.BoxGeometry(w,h,d), new THREE.MeshStandardMaterial({color:0xdde5ef, roughness:1}));
     m.position.set(x, h/2, z); m.castShadow = m.receiveShadow = true;
     contextGroup.add(m);
   });
@@ -419,8 +427,8 @@ const objectMeshes = new Map(); // id -> mesh
 function makeMesh(id, data) {
   const { type, w, d, h, x, z, r = 0, color } = data;
   const mat = new THREE.MeshStandardMaterial({
-    color: color ?? (type === 'wall' ? 0xcfc6b0 : type === 'slab' ? 0xc9d4df : 0xe7ddc8),
-    roughness: 0.85,
+    color: color ?? (type === 'wall' ? 0xf5f5f5 : type === 'slab' ? 0xe8eef5 : 0xffffff),
+    roughness: 0.8,
   });
   const mesh = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
   mesh.position.set(x, h/2, z);
@@ -524,7 +532,7 @@ function select(mesh) {
   for (const m of objectMeshes.values()) m.material.emissive.setHex(0x000000);
   state.selectedId = mesh?.userData.id || null;
   if (mesh) {
-    mesh.material.emissive = new THREE.Color(0xff5a1f);
+    mesh.material.emissive = new THREE.Color(0x38bdf8);
     mesh.material.emissiveIntensity = 0.35;
   }
   renderInspector();
@@ -602,7 +610,7 @@ renderer.domElement.addEventListener('pointermove', (e) => {
     if (w < 0.05 || d < 0.05) return;
     previewMesh = new THREE.Mesh(
       new THREE.BoxGeometry(w, 0.02, d),
-      new THREE.MeshBasicMaterial({ color: 0xff5a1f, transparent: true, opacity: 0.35 })
+      new THREE.MeshBasicMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.4 })
     );
     previewMesh.position.set((downPt.x + p2.x) / 2, 0.01, (downPt.z + p2.z) / 2);
     scene.add(previewMesh);
@@ -1169,7 +1177,7 @@ function generateMassings(brief) {
   const types = pickArchetypes(program, variants);
   const spacing = Math.max(30, Math.sqrt(area) * 1.2);
   const startX = -spacing * (variants - 1) / 2;
-  const colors = [0xff5a1f, 0x60a5fa, 0xf472b6, 0x22c55e, 0xa78bfa];
+  const colors = [0x38bdf8, 0x4ade80, 0x60a5fa, 0x34d399, 0x93c5fd];
 
   types.forEach((type, i) => {
     const parts = archetypes[type](area, floors, floorHeight);
